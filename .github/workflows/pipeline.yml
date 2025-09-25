@@ -12,11 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Debug: show repo structure
       - name: List repository files
         run: ls -R
 
-      # Auto-detect and install requirements
       - name: Install Dependencies
         run: |
           REQ=$(find . -name "requirements.txt" | head -n 1)
@@ -31,12 +29,12 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # Detect repo folder path for python scripts
-          SCRIPT_PATH=$(find . -path "*/tourism_project/model_building/data_register.py" | head -n 1)
+          SCRIPT_PATH=$(find . -name "data_register.py" | head -n 1)
           if [ -z "$SCRIPT_PATH" ]; then
             echo "❌ data_register.py not found"
             exit 1
           fi
+          echo "Running $SCRIPT_PATH"
           python $SCRIPT_PATH
 
   data-prep:
@@ -62,11 +60,12 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          SCRIPT_PATH=$(find . -path "*/tourism_project/model_building/prep.py" | head -n 1)
+          SCRIPT_PATH=$(find . -name "prep.py" | head -n 1)
           if [ -z "$SCRIPT_PATH" ]; then
             echo "❌ prep.py not found"
             exit 1
           fi
+          echo "Running $SCRIPT_PATH"
           python $SCRIPT_PATH
 
   model-training:
@@ -97,11 +96,12 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          SCRIPT_PATH=$(find . -path "*/tourism_project/model_building/train.py" | head -n 1)
+          SCRIPT_PATH=$(find . -name "train.py" | head -n 1)
           if [ -z "$SCRIPT_PATH" ]; then
             echo "❌ train.py not found"
             exit 1
           fi
+          echo "Running $SCRIPT_PATH"
           python $SCRIPT_PATH
 
   deploy-hosting:
@@ -127,9 +127,10 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          SCRIPT_PATH=$(find . -path "*/tourism_project/deployment/hosting.py" | head -n 1)
+          SCRIPT_PATH=$(find . -name "hosting.py" | head -n 1)
           if [ -z "$SCRIPT_PATH" ]; then
             echo "❌ hosting.py not found"
             exit 1
           fi
+          echo "Running $SCRIPT_PATH"
           python $SCRIPT_PATH
