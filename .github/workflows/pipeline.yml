@@ -11,8 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Debug File Structure
+        run: ls -R
       - name: Install Dependencies
-        run: pip install -r tourism_project/requirements.txt
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt;
+          elif [ -f deployment/requirements.txt ]; then pip install -r deployment/requirements.txt;
+          elif [ -f tourism_project/requirements.txt ]; then pip install -r tourism_project/requirements.txt;
+          else echo "❌ requirements.txt not found" && exit 1;
+          fi
       - name: Upload Dataset to Hugging Face Hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -23,8 +30,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Debug File Structure
+        run: ls -R
       - name: Install Dependencies
-        run: pip install -r tourism_project/requirements.txt
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt;
+          elif [ -f deployment/requirements.txt ]; then pip install -r deployment/requirements.txt;
+          elif [ -f tourism_project/requirements.txt ]; then pip install -r tourism_project/requirements.txt;
+          else echo "❌ requirements.txt not found" && exit 1;
+          fi
       - name: Run Data Preparation
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -35,12 +49,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Debug File Structure
+        run: ls -R
       - name: Install Dependencies
-        run: pip install -r tourism_project/requirements.txt
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt;
+          elif [ -f deployment/requirements.txt ]; then pip install -r deployment/requirements.txt;
+          elif [ -f tourism_project/requirements.txt ]; then pip install -r tourism_project/requirements.txt;
+          else echo "❌ requirements.txt not found" && exit 1;
+          fi
       - name: Start MLflow Server
         run: |
-          nohup mlflow ui --host 0.0.0.0 --port 5000 &  # Run MLflow UI in the background
-          sleep 5  # Wait for a moment to let the server start
+          nohup mlflow ui --host 0.0.0.0 --port 5000 >/dev/null 2>&1 &
+          sleep 5
       - name: Train Model
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -51,8 +72,15 @@ jobs:
     needs: [model-training, data-prep, register-dataset]
     steps:
       - uses: actions/checkout@v3
+      - name: Debug File Structure
+        run: ls -R
       - name: Install Dependencies
-        run: pip install -r tourism_project/requirements.txt
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt;
+          elif [ -f deployment/requirements.txt ]; then pip install -r deployment/requirements.txt;
+          elif [ -f tourism_project/requirements.txt ]; then pip install -r tourism_project/requirements.txt;
+          else echo "❌ requirements.txt not found" && exit 1;
+          fi
       - name: Deploy to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
