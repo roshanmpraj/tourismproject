@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 gradio==3.44.0
->>>>>>> b54a719e1157ee7680bdacf7add775c642841175
 huggingface_hub==0.32.6
 datasets==3.6.0
 pandas==2.2.2
