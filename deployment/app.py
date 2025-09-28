@@ -5,6 +5,11 @@ import joblib
 import re
 
 # =============================
+# Streamlit UI Configuration (MUST BE FIRST COMMAND)
+# =============================
+st.set_page_config(page_title="Tourism Prediction", layout="wide")
+
+# =============================
 # Load the trained model
 # =============================
 @st.cache_resource
@@ -22,7 +27,8 @@ def load_model():
         return model
     except Exception as e:
         st.error(f"Error loading model: {e}")
-        st.stop()
+        # Stop execution if the model cannot be loaded
+        st.stop() 
 
 model = load_model()
 
@@ -30,22 +36,22 @@ model = load_model()
 # Utility Function: Column Name Sanitation
 # =============================
 def to_snake_case(name):
-    """Converts PascalCase/CamelCase names to snake_case."""
+    """Converts PascalCase/CamelCase names to snake_case, matching model training format."""
     s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s).lower().replace(' ', '_')
 
 # =============================
 # Streamlit UI
 # =============================
-st.set_page_config(page_title="Tourism Prediction", layout="wide")
 
 st.title("🧳 Tourism Package Purchase Prediction")
 st.markdown("""
 This application predicts whether a customer is likely to purchase a tourism package based on their profile.
+Please enter customer details below to get a prediction.
 ---
 """)
 
-# Layout for inputs
+# Layout for inputs using two columns
 with st.container():
     col1, col2 = st.columns(2)
 
@@ -55,7 +61,7 @@ with st.container():
         gender = st.selectbox("Gender", ["Male", "Female", "Other"])
         marital_status = st.selectbox("Marital Status", ["Single", "Married", "Divorced"])
         occupation = st.selectbox("Occupation", ["Salaried", "Small Business", "Large Business", "Free Lancer"])
-        monthly_income = st.number_input("Monthly Income", min_value=1000, max_value=100000, value=20000)
+        monthly_income = st.number_input("Monthly Income (INR)", min_value=1000, max_value=100000, value=20000)
         own_car = st.selectbox("Owns a Car", [0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
         passport = st.selectbox("Has Passport", [0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
 
@@ -98,7 +104,7 @@ input_data = pd.DataFrame([{
     "Designation": designation
 }])
 
-# Ensure the DataFrame column names match the model's expected format (snake_case)
+# Sanitize the DataFrame column names to match the model's expected format (snake_case)
 input_data.columns = [to_snake_case(col) for col in input_data.columns]
 
 
@@ -109,9 +115,8 @@ st.markdown("---")
 if st.button("Predict Purchase", type="primary"):
     if model:
         try:
-            # Drop the 'other' gender if the model was not trained on it, or handle it as needed
-            # Assuming 'Other' will be treated as 'Female' or the most common class for simplicity
-            input_data.loc[input_data['gender'] == 'Other', 'gender'] = 'Female'
+            # Handle 'Other' gender by treating it as 'Female' if the model only handles two genders
+            input_data.loc[input_data['gender'] == 'other', 'gender'] = 'female'
             
             prediction = model.predict(input_data)[0]
             
@@ -119,8 +124,10 @@ if st.button("Predict Purchase", type="primary"):
             if prediction == 1:
                 st.balloons()
                 st.success(f"The model predicts: **✅ HIGH LIKELIHOOD of Purchasing the Package**")
+                st.markdown("This customer profile aligns well with successful package purchases.")
             else:
                 st.warning(f"The model predicts: **❌ LOW LIKELIHOOD of Purchasing the Package**")
+                st.markdown("Consider adjusting the pitch or offering a different package type.")
 
         except Exception as e:
-            st.error(f"An error occurred during prediction. This is often due to missing features or mismatched data types: {e}")
+            st.error(f"An error occurred during prediction. Please check all inputs: {e}")
