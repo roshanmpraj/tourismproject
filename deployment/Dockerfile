@@ -10,17 +10,18 @@ COPY . .
 # Install Python dependencies listed in requirements.txt
 RUN pip3 install -r requirements.txt
 
+# Create a non-root user and switch to it
 RUN useradd -m -u 1000 user
 USER user
-ENV HOME=/home/user \
-<<<<<<< HEAD
-        PATH=/home/user/.local/bin:$PATH
-=======
-	PATH=/home/user/.local/bin:$PATH
->>>>>>> b54a719e1157ee7680bdacf7add775c642841175
 
+# Set environment variables for the user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH
+
+# Set the working directory to the user's home app folder
 WORKDIR $HOME/app
 
+# Copy files again, ensuring correct ownership (since the previous COPY was done by root)
 COPY --chown=user . $HOME/app
 
 # Define the command to run the Streamlit app on port "8501" and make it accessible externally
