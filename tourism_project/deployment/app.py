@@ -2,14 +2,7 @@ import streamlit as st
 import pandas as pd
 from huggingface_hub import hf_hub_download
 import joblib
-<<<<<<< HEAD
 import re
-=======
-<<<<<<< HEAD
-=======
-import re
->>>>>>> 56d2eae19a1dd642ded8778766eddace54891bb0
->>>>>>> 0d7e26c74894916eadade37083f9733b68e8f8a1
 
 # =============================
 # Load the trained model
@@ -61,17 +54,7 @@ product_pitched = st.selectbox("Product Pitched", ["Basic", "Standard", "Deluxe"
 marital_status = st.selectbox("Marital Status", ["Single", "Married", "Divorced"])
 designation = st.selectbox("Designation", ["Executive", "Manager", "Senior Manager", "AVP", "VP"])
 
-<<<<<<< HEAD
 # Assemble input data into DataFrame
-=======
-<<<<<<< HEAD
-# -----------------------------
-# Assemble input into DataFrame
-# -----------------------------
-=======
-# Assemble input data into DataFrame
->>>>>>> 56d2eae19a1dd642ded8778766eddace54891bb0
->>>>>>> 0d7e26c74894916eadade37083f9733b68e8f8a1
 input_data = pd.DataFrame([{
     "Age": age,
     "CityTier": city_tier,
@@ -93,11 +76,6 @@ input_data = pd.DataFrame([{
     "Designation": designation
 }])
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> 0d7e26c74894916eadade37083f9733b68e8f8a1
 # =============================
 # FIX: Sanitize column names
 # The model was likely trained on lowercase, snake_case column names.
@@ -110,10 +88,6 @@ def to_snake_case(name):
 input_data.columns = [to_snake_case(col) for col in input_data.columns]
 
 
-<<<<<<< HEAD
-=======
->>>>>>> 56d2eae19a1dd642ded8778766eddace54891bb0
->>>>>>> 0d7e26c74894916eadade37083f9733b68e8f8a1
 # -----------------------------
 # Prediction
 # -----------------------------

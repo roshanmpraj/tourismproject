@@ -3,15 +3,7 @@ import os
 
 api = HfApi(token=os.getenv("HF_TOKEN"))
 api.upload_folder(
-<<<<<<< HEAD
     folder_path="tourism_project/deployment",     # the local folder containing your files
-=======
-<<<<<<< HEAD
-    folder_path="tourism_project/deployment",     # the local folder containing your files
-=======
-    folder_path="deployment",     # the local folder containing your files
->>>>>>> 56d2eae19a1dd642ded8778766eddace54891bb0
->>>>>>> 0d7e26c74894916eadade37083f9733b68e8f8a1
     # replace with your repoid
     repo_id="Roshanmpraj/tourismproject",          # the target repo
 
