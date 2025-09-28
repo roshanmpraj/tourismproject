@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import streamlit as st
 import pandas as pd
 from huggingface_hub import hf_hub_download
@@ -8,52 +7,74 @@ import re
 # =============================
 # Load the trained model
 # =============================
-try:
-    # Replace with your repo id where model is uploaded
-    model_path = hf_hub_download(
-        repo_id="Roshanmpraj/Tourism",
-        filename="best_tourism_model_v1.joblib",
-        repo_type="model"
-    )
-    model = joblib.load(model_path)
-    st.success("Model loaded successfully!")
-except Exception as e:
-    st.error(f"Error loading model: {e}")
-    st.stop()
+@st.cache_resource
+def load_model():
+    """Downloads and loads the trained joblib model from Hugging Face Hub."""
+    try:
+        # Repository ID and filename for the model
+        model_path = hf_hub_download(
+            repo_id="Roshanmpraj/Tourism",
+            filename="best_tourism_model_v1.joblib",
+            repo_type="model"
+        )
+        model = joblib.load(model_path)
+        st.success("Model loaded successfully from Hugging Face Hub!")
+        return model
+    except Exception as e:
+        st.error(f"Error loading model: {e}")
+        st.stop()
+
+model = load_model()
+
+# =============================
+# Utility Function: Column Name Sanitation
+# =============================
+def to_snake_case(name):
+    """Converts PascalCase/CamelCase names to snake_case."""
+    s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s).lower().replace(' ', '_')
 
 # =============================
 # Streamlit UI
 # =============================
-st.title("🧳 Tourism Prediction App")
-st.write("""
-This application predicts whether a customer is likely to purchase a tourism package.
-Please enter customer details below to get a prediction.
+st.set_page_config(page_title="Tourism Prediction", layout="wide")
+
+st.title("🧳 Tourism Package Purchase Prediction")
+st.markdown("""
+This application predicts whether a customer is likely to purchase a tourism package based on their profile.
+---
 """)
 
-# -----------------------------
-# User Inputs
-# -----------------------------
-# Numeric features
-age = st.number_input("Age", min_value=18, max_value=100, value=30)
-city_tier = st.selectbox("City Tier", [1, 2, 3])
-duration_pitch = st.number_input("Duration of Pitch", min_value=0, max_value=60, value=10)
-num_persons = st.number_input("Number of Persons Visiting", min_value=1, max_value=10, value=2)
-num_followups = st.number_input("Number of Follow-ups", min_value=0, max_value=10, value=2)
-preferred_star = st.selectbox("Preferred Property Star Rating", [1, 2, 3, 4, 5])
-num_trips = st.number_input("Number of Trips", min_value=0, max_value=50, value=5)
-passport = st.selectbox("Has Passport", [0, 1])
-pitch_score = st.slider("Pitch Satisfaction Score", 1, 5, 3)
-own_car = st.selectbox("Owns a Car", [0, 1])
-num_children = st.number_input("Number of Children Visiting", min_value=0, max_value=10, value=0)
-monthly_income = st.number_input("Monthly Income", min_value=1000, max_value=100000, value=20000)
+# Layout for inputs
+with st.container():
+    col1, col2 = st.columns(2)
 
-# Categorical features
-typeof_contact = st.selectbox("Type of Contact", ["Company Invited", "Self Enquiry"])
-occupation = st.selectbox("Occupation", ["Salaried", "Small Business", "Large Business", "Free Lancer"])
-gender = st.selectbox("Gender", ["Male", "Female"])
-product_pitched = st.selectbox("Product Pitched", ["Basic", "Standard", "Deluxe", "Super Deluxe", "King"])
-marital_status = st.selectbox("Marital Status", ["Single", "Married", "Divorced"])
-designation = st.selectbox("Designation", ["Executive", "Manager", "Senior Manager", "AVP", "VP"])
+    with col1:
+        st.header("Personal Details")
+        age = st.number_input("Age", min_value=18, max_value=100, value=30)
+        gender = st.selectbox("Gender", ["Male", "Female", "Other"])
+        marital_status = st.selectbox("Marital Status", ["Single", "Married", "Divorced"])
+        occupation = st.selectbox("Occupation", ["Salaried", "Small Business", "Large Business", "Free Lancer"])
+        monthly_income = st.number_input("Monthly Income", min_value=1000, max_value=100000, value=20000)
+        own_car = st.selectbox("Owns a Car", [0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
+        passport = st.selectbox("Has Passport", [0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
+
+
+    with col2:
+        st.header("Travel & Pitch Details")
+        city_tier = st.selectbox("City Tier", [1, 2, 3], help="Tier of the city the customer is from.")
+        num_persons = st.number_input("Number of Persons Visiting", min_value=1, max_value=10, value=2)
+        num_children = st.number_input("Number of Children Visiting", min_value=0, max_value=10, value=0)
+        num_trips = st.number_input("Number of Trips Taken in Last Year", min_value=0, max_value=50, value=5)
+
+        typeof_contact = st.selectbox("Type of Contact", ["Company Invited", "Self Enquiry"])
+        product_pitched = st.selectbox("Product Pitched", ["Basic", "Standard", "Deluxe", "Super Deluxe", "King"])
+        designation = st.selectbox("Designation", ["Executive", "Manager", "Senior Manager", "AVP", "VP"])
+        preferred_star = st.selectbox("Preferred Property Star Rating", [1, 2, 3, 4, 5])
+        pitch_score = st.slider("Pitch Satisfaction Score (1-5)", 1, 5, 3)
+        duration_pitch = st.number_input("Duration of Pitch (minutes)", min_value=0, max_value=60, value=10)
+        num_followups = st.number_input("Number of Follow-ups", min_value=0, max_value=10, value=2)
+
 
 # Assemble input data into DataFrame
 input_data = pd.DataFrame([{
@@ -77,157 +98,29 @@ input_data = pd.DataFrame([{
     "Designation": designation
 }])
 
-# =============================
-# FIX: Sanitize column names
-# The model was likely trained on lowercase, snake_case column names.
-# This ensures the input DataFrame matches the model's expectations.
-# =============================
-def to_snake_case(name):
-    s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s).lower().replace(' ', '_')
-
+# Ensure the DataFrame column names match the model's expected format (snake_case)
 input_data.columns = [to_snake_case(col) for col in input_data.columns]
 
 
 # -----------------------------
-# Prediction
+# Prediction Button and Logic
 # -----------------------------
-if st.button("Predict Purchase"):
-    try:
-        prediction = model.predict(input_data)[0]
-        result = "✅ Will Purchase Package" if prediction == 1 else "❌ Will Not Purchase Package"
-        st.subheader("Prediction Result:")
-        st.success(f"The model predicts: **{result}**")
-    except Exception as e:
-        st.error(f"An error occurred during prediction: {e}")
-=======
-import gradio as gr
-import pandas as pd
-import joblib
-import numpy as np
-from pathlib import Path
+st.markdown("---")
+if st.button("Predict Purchase", type="primary"):
+    if model:
+        try:
+            # Drop the 'other' gender if the model was not trained on it, or handle it as needed
+            # Assuming 'Other' will be treated as 'Female' or the most common class for simplicity
+            input_data.loc[input_data['gender'] == 'Other', 'gender'] = 'Female'
+            
+            prediction = model.predict(input_data)[0]
+            
+            st.subheader("Prediction Result:")
+            if prediction == 1:
+                st.balloons()
+                st.success(f"The model predicts: **✅ HIGH LIKELIHOOD of Purchasing the Package**")
+            else:
+                st.warning(f"The model predicts: **❌ LOW LIKELIHOOD of Purchasing the Package**")
 
-# --------------------------
-# Config
-# --------------------------
-BASE_DIR = Path(__file__).parent
-MODEL_PATH = BASE_DIR.parent / "models" / "insurance_model.pkl"
-ENCODER_PATH = BASE_DIR.parent / "models" / "encoders.pkl"
-
-# --------------------------
-# Load Model & Encoders
-# --------------------------
-try:
-    model = joblib.load(MODEL_PATH)
-    encoders = joblib.load(ENCODER_PATH)
-    print("✅ Model and encoders loaded successfully.")
-except Exception as e:
-    print("❌ Error loading model or encoders:", e)
-    model = None
-    encoders = None
-
-# --------------------------
-# Define Expected Features
-# --------------------------
-EXPECTED_FEATURES = [
-    "Age", "AnnualIncome", "FamilyMembers", "TourPackageType",
-    "Destination", "Season", "TravelInsurance"
-]
-
-# --------------------------
-# Preprocess Function
-# --------------------------
-def preprocess_input(data: dict):
-    """Converts user input into a model-ready DataFrame."""
-
-    # Fill missing features with default values
-    for feature in EXPECTED_FEATURES:
-        if feature not in data:
-            data[feature] = np.nan
-
-    df = pd.DataFrame([data])
-
-    # Encode categorical columns
-    for col, encoder in encoders.items():
-        if col in df.columns:
-            try:
-                df[col] = encoder.transform(df[col])
-            except Exception:
-                # If unseen category appears, replace with 'unknown' or first class
-                df[col] = df[col].apply(lambda x: x if x in encoder.classes_ else encoder.classes_[0])
-                df[col] = encoder.transform(df[col])
-    return df
-
-# --------------------------
-# Prediction Function
-# --------------------------
-def predict_tourism(age, income, family, package, destination, season, insurance):
-    if model is None or encoders is None:
-        return "❌ Model or encoders not loaded properly. Please check setup."
-
-    input_data = {
-        "Age": age,
-        "AnnualIncome": income,
-        "FamilyMembers": family,
-        "TourPackageType": package,
-        "Destination": destination,
-        "Season": season,
-        "TravelInsurance": insurance
-    }
-
-    df = preprocess_input(input_data)
-    try:
-        prediction = model.predict(df)[0]
-        return f"🎯 Predicted result: {prediction}"
-    except Exception as e:
-        return f"❌ Prediction failed: {str(e)}"
-
-# --------------------------
-# Gradio UI
-# --------------------------
-with gr.Blocks(title="Tourism Prediction App") as app:
-    gr.Markdown("## 🧭 Tourism Insurance Prediction App")
-    gr.Markdown("Enter your details below to predict your tourism outcome:")
-
-    with gr.Row():
-        age = gr.Number(label="Age", value=30)
-        income = gr.Number(label="Annual Income", value=50000)
-        family = gr.Number(label="Family Members", value=3)
-
-    with gr.Row():
-        package = gr.Dropdown(
-            label="Tour Package Type",
-            choices=["Standard", "Deluxe", "Premium"],
-            value="Standard"
-        )
-        destination = gr.Dropdown(
-            label="Destination",
-            choices=["Kerala", "Goa", "Kashmir", "Dubai", "Singapore"],
-            value="Kerala"
-        )
-        season = gr.Dropdown(
-            label="Season",
-            choices=["Summer", "Winter", "Rainy"],
-            value="Summer"
-        )
-        insurance = gr.Dropdown(
-            label="Travel Insurance",
-            choices=["Yes", "No"],
-            value="Yes"
-        )
-
-    predict_btn = gr.Button("🚀 Predict")
-    output = gr.Textbox(label="Prediction Result")
-
-    predict_btn.click(
-        predict_tourism,
-        inputs=[age, income, family, package, destination, season, insurance],
-        outputs=[output]
-    )
-
-# --------------------------
-# Launch
-# --------------------------
-if __name__ == "__main__":
-    app.launch()
->>>>>>> b54a719e1157ee7680bdacf7add775c642841175
+        except Exception as e:
+            st.error(f"An error occurred during prediction. This is often due to missing features or mismatched data types: {e}")
