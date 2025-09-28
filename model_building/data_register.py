@@ -2,25 +2,13 @@ from huggingface_hub.utils import RepositoryNotFoundError, HfHubHTTPError
 from huggingface_hub import HfApi, create_repo
 import os
 
-<<<<<<< HEAD
-api = HfApi(token=os.getenv("HF_TOKEN"))
-
-repo_id = "Roshanmpraj/Tourism"    # please create your space and repository
-
-repo_type = "dataset"
-
-# Initialize API client
-api = HfApi(token=os.getenv("HF_TOKEN"))
-
-=======
 # Initialize API client
 api = HfApi(token=os.getenv("HF_TOKEN"))
 
 repo_id = "Roshanmpraj/Tourism"  # please create your space and repository
 repo_type = "dataset"
 
->>>>>>> b54a719e1157ee7680bdacf7add775c642841175
-# Step 1: Check if the space exists
+# Step 1: Check if the repository exists
 try:
     api.repo_info(repo_id=repo_id, repo_type=repo_type)
     print(f"Space '{repo_id}' already exists. Using it.")
@@ -29,14 +17,9 @@ except RepositoryNotFoundError:
     create_repo(repo_id=repo_id, repo_type=repo_type, private=False)
     print(f"Space '{repo_id}' created.")
 
-<<<<<<< HEAD
-api.upload_folder(
-    folder_path="tourism_project/data",
-=======
 # Step 2: Upload data folder to repository
 api.upload_folder(
-    folder_path="data",
->>>>>>> b54a719e1157ee7680bdacf7add775c642841175
+    folder_path="data",  # Adjust this path to your local data folder
     repo_id=repo_id,
     repo_type=repo_type,
 )
